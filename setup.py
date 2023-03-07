@@ -12,16 +12,16 @@ def read(file_name):
 
 
 setuptools.setup(
-    name="pytest-circleci-parallelized",
-    version="0.1.0",
-    author="Ryan Wilson-Perkin",
-    author_email="ryanwilsonperkin@gmail.com",
+    name="pytest-gitlabci-parallelized",
+    version="0.1.1",
+    author="Michał Leśniewski, Ryan Wilson-Perkin",
+    author_email="mlesniew@gmail.com",
     license="MIT",
-    url="https://github.com/ryanwilsonperkin/pytest-circleci-parallelized",
-    description="Parallelize pytest across CircleCI workers.",
+    url="https://github.com/mlesniew/pytest-gitlabci-parallelized",
+    description="Parallelize pytest across GitLab CI workers.",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    py_modules=["pytest_circleci_parallelized"],
+    py_modules=["pytest_gitlabci_parallelized"],
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
     install_requires=["pytest"],
     classifiers=[
@@ -39,5 +39,4 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "License :: OSI Approved :: MIT License",
     ],
-    entry_points={"pytest11": ["circleci-parallelized = pytest_circleci_parallelized"]},
 )

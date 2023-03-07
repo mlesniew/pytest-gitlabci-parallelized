@@ -1,56 +1,46 @@
-# pytest-circleci-parallelized
+# pytest-gitlabci-parallelized
 
-[![PyPI version](https://img.shields.io/pypi/v/pytest-circleci-parallelized.svg)](https://pypi.org/project/pytest-circleci-parallelized) [![Python versions](https://img.shields.io/pypi/pyversions/pytest-circleci-parallelized.svg)](https://pypi.org/project/pytest-circleci-parallelized) [![CircleCI build status](https://circleci.com/gh/ryanwilsonperkin/pytest-circleci-parallelized.svg?style=svg)](https://circleci.com/gh/ryanwilsonperkin/pytest-circleci-parallelized)
+[![PyPI version](https://img.shields.io/pypi/v/pytest-gitlabci-parallelized.svg)](https://pypi.org/project/pytest-gitlabci-parallelized) [![Python versions](https://img.shields.io/pypi/pyversions/pytest-gitlabci-parallelized.svg)](https://pypi.org/project/pytest-gitlabci-parallelized)
 
-Parallelize pytest across CircleCI workers.
+Parallelize pytest across GitLab CI workers.
+
+This pytest plugin is inspired and based on [pytest-circleci-parallelized](https://github.com/ryanwilsonperkin/pytest-circleci-parallelized).
 
 ---
 
 ## Features
 
-Leverage the builtin parallelism of CircleCI to run your test suites. Call `pytest` with the `--circleci-parallelize` flag to automatically split tests amongst nodes using the `circleci tests split` utility.
+Leverage the builtin parallelism of GitLab CI to run your test suites.  Call `pytest` with the `CI_NODE_INDEX` and `CI_NODE_TOTAL` environment variables set or use the `--ci-node-index` and `--ci-node-total` switches to split tests amongst nodes.
 
-Read more about CircleCI test splitting [here][circleci-test-splitting].
+Read more about the GitLab CI parallel test splitting [here](https://docs.gitlab.com/ee/ci/yaml/#parallel).
 
 ```yaml
-# .circleci/config.yml
-version: 2
-jobs:
-  test:
-    docker:
-      - image: circleci/python:3
-    parallelism: 10
-    steps:
-      - checkout
-      - run: pytest --circleci-parallelize
-workflows:
-  version: 2
-  test:
-    jobs:
-      - test
+# .gitlab-ci.yml
+
+tests:
+  stage: test
+  script: pytest
+  parallel: 5
+
 ```
+
 
 ## Installation
 
-You can install "pytest-circleci-parallelized" via pip from [PyPI][pypi].
+You can install "pytest-gitlabci-parallelized" via pip from [PyPI](https://pypi.org/project/pytest-gitlabci-parallelized/).
 
 ```sh
-pip install pytest-circleci-parallelized
+pip install pytest-gitlabci-parallelized
 ```
 
 ## Contributing
 
-Contributors welcome! Tests can be run with [`pytest`][pytest]
+Contributors welcome! Tests can be run with [`pytest`](https://docs.pytest.org/en/7.1.x/).
 
 ## License
 
-Distributed under the terms of the [MIT](/LICENSE) license, `pytest-circleci-parallelized` is free and open source software.
+Distributed under the terms of the [MIT](/LICENSE) license, `pytest-gitlabci-parallelized` is free and open source software.
 
 ## Issues
 
-If you encounter any problems, please [file an issue](new-issue) along with a detailed description.
-
-[pytest]: https://docs.pytest.org/en/7.1.x/
-[pypi]: https://pypi.org/project/pytest-circleci-parallelized/
-[new-issue]: https://github.com/ryanwilsonperkin/pytest-circleci-parallelized/issues/new
-[circleci-test-splitting]: https://circleci.com/docs/2.0/parallelism-faster-jobs/
+If you encounter any problems, please [file an issue](https://github.com/mlesniew/pytest-gitlabci-parallelized/issues/new) along with a detailed description.
