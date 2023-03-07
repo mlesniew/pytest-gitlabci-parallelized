@@ -1,74 +1,37 @@
 # -*- coding: utf-8 -*-
-import collections
-import subprocess
-
 import pytest
+import os
 
 
 def pytest_addoption(parser):
-    group = parser.getgroup("circleci-parallelized")
+    group = parser.getgroup("gitlab-ci-parallel")
     group.addoption(
-        "--circleci-parallelize",
-        dest="circleci_parallelize",
+        "--gitlab-ci-parallel",
+        dest="gitlab_ci_parallel",
         action="store_true",
         default=False,
-        help="Enable parallelization across CircleCI containers.",
+        help="Enable parallelization across GitLab CI runners.",
     )
 
 
-def get_verbosity(config):
-    return config.option.verbose
+def get_gitlab_node_info():
+    try:
+        idx = int(os.getenv("CI_NODE_INDEX", "0"))
+        tot = int(os.getenv("CI_NODE_TOTAL", "0"))
+        if 0 <= idx < tot and tot > 0:
+            return idx, tot
+    except ValueError:
+        pass
+    return None
 
 
-def circleci_parallelized_enabled(config):
-    return config.getoption("circleci_parallelize")
+def gitlab_ci_parallel_enabled(config):
+    return config.getoption("gitlab_ci_parallel") and get_gitlab_node_info()
 
 
 def pytest_report_collectionfinish(config, startdir, items):
-    if circleci_parallelized_enabled(config):
-        verbosity = get_verbosity(config)
-        if verbosity == 0:
-            return "running {} items due to CircleCI parallelism".format(len(items))
-        elif verbosity > 0:
-            return "running {} items due to CircleCI parallelism: {}".format(
-                len(items), ", ".join(map(get_class_name, items))
-            )
-    else:
-        return ""
-
-
-def get_class_name(item):
-    class_name, module_name = None, None
-    for parent in reversed(item.listchain()):
-        if isinstance(parent, pytest.Class):
-            class_name = parent.name
-        elif isinstance(parent, pytest.Module):
-            module_name = parent.module.__name__
-            break
-
-    if class_name:
-        return "{}.{}".format(module_name, class_name)
-    else:
-        return module_name
-
-
-def filter_tests_with_circleci(test_list):
-    circleci_input = "\n".join(test_list).encode("utf-8")
-    p = subprocess.Popen(
-        [
-            "circleci",
-            "tests",
-            "split",
-            "--split-by=timings",
-            "--timings-type=classname",
-        ],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-    )
-    circleci_output, _ = p.communicate(circleci_input)
-    return [
-        line.strip() for line in circleci_output.decode("utf-8").strip().split("\n")
-    ]
+    if gitlab_ci_parallel_enabled(config):
+        return "GitLab CI parallelizm is enabled, running only {} tests.".format(len(items))
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -80,23 +43,17 @@ def pytest_cmdline_main(config):
     # https://docs.pytest.org/en/7.1.x/reference/exit-codes.html
     # If there are more workers than tests, this can cause "No Tests" error
     # This is fine, and we cast it to an OK exit code
-    if circleci_parallelized_enabled(config) and exit_code == 5:
+    if gitlab_ci_parallel_enabled(config) and exit_code == 5:
         outcome.force_result(0)
 
 
 def pytest_collection_modifyitems(session, config, items):
-    if not circleci_parallelized_enabled(config):
+    if not gitlab_ci_parallel_enabled(config):
         return
 
-    class_mapping = collections.defaultdict(list)
-    for item in items:
-        class_name = get_class_name(item)
-        class_mapping[class_name].append(item)
+    node_idx, node_tot = get_gitlab_node_info()
 
-    filtered_tests = filter_tests_with_circleci(class_mapping.keys())
+    a = (len(items) * node_idx) // node_tot
+    b = (len(items) * (node_idx + 1)) // node_tot
 
-    new_items = []
-    for name in filtered_tests:
-        new_items.extend(class_mapping[name])
-
-    items[:] = new_items
+    items[:] = items[a: b]
