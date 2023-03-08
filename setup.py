@@ -13,7 +13,7 @@ def read(file_name):
 
 setuptools.setup(
     name="pytest-gitlabci-parallelized",
-    version="0.1.3",
+    version="0.1.4",
     author="Michał Leśniewski, Ryan Wilson-Perkin",
     author_email="mlesniew@gmail.com",
     license="MIT",
